@@ -1,0 +1,40 @@
+version: "3.9"
+
+volumes:
+  pgdata:
+  static:
+
+services:
+  postgres:
+    container_name: "postgresdb"
+    image: "postgres:latest"
+    environment:
+      POSTGRES_DB: "netology_stocks_products"
+      POSTGRES_USER: "admin1"
+      POSTGRES_PASSWORD: "admin1pass"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin1 -d netology_stocks_products"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  backend:
+    build: ./stocks
+    volumes:
+      - static:/src/static/
+    expose:
+      - 8000
+    depends_on:
+      - postgres
+
+  nginx:
+    build: ./nginx
+    volumes:
+      - static:/src/static/
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
